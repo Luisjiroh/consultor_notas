@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Consulta de Nota Final - Plan de Mercadeo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f4f4f6;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+    .card {
+      background: #ffffff;
+      padding: 24px 28px;
+      border-radius: 12px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+      max-width: 420px;
+      width: 100%;
+    }
+    h1 {
+      font-size: 1.4rem;
+      margin: 0 0 8px;
+      text-align: center;
+    }
+    p.sub {
+      margin: 0 0 20px;
+      font-size: 0.9rem;
+      text-align: center;
+      color: #555;
+    }
+    label {
+      display: block;
+      margin-bottom: 6px;
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+    input[type="text"] {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-size: 0.95rem;
+      box-sizing: border-box;
+    }
+    button {
+      margin-top: 14px;
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: none;
+      background: #4b5bdc;
+      color: #fff;
+      font-weight: 600;
+      font-size: 0.95rem;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #3b48b3;
+    }
+    .resultado {
+      margin-top: 16px;
+      padding: 10px 12px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+    }
+    .ok {
+      background: #e6f7ea;
+      border: 1px solid #88c899;
+      color: #245b32;
+    }
+    .error {
+      background: #fdeaea;
+      border: 1px solid #e69a9a;
+      color: #8b1f1f;
+    }
+    .nota {
+      font-size: 1.2rem;
+      font-weight: 700;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Consulta de Nota Final</h1>
+    <p class="sub">Plan de Mercadeo – Posgrado</p>
+
+    <form id="form-consulta">
+      <label for="codigo">Digite su código o número de cédula</label>
+      <input type="text" id="codigo" name="codigo" required />
+      <button type="submit">Consultar nota</button>
+    </form>
+
+    <div id="resultado" class="resultado" style="display:none;"></div>
+  </div>
+
+  <script>
+    const form = document.getElementById("form-consulta");
+    const resultadoDiv = document.getElementById("resultado");
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const codigo = document.getElementById("codigo").value.trim();
+      if (!codigo) return;
+
+      resultadoDiv.style.display = "none";
+      resultadoDiv.className = "resultado";
+      resultadoDiv.textContent = "Consultando...";
+
+      try {
+        const res = await fetch(`/api/nota?codigo=${encodeURIComponent(codigo)}`);
+        const data = await res.json();
+
+        if (!res.ok || !data.encontrado) {
+          resultadoDiv.textContent = data.mensaje || "No se encontró información para ese código.";
+          resultadoDiv.classList.add("error");
+        } else {
+          resultadoDiv.innerHTML = `
+            <div><strong>Estudiante:</strong> ${data.nombre}</div>
+            <div><strong>Código:</strong> ${data.codigo}</div>
+            <div class="nota">Nota final: ${data.nota}</div>
+          `;
+          resultadoDiv.classList.add("ok");
+        }
+      } catch (err) {
+        console.error("Error en fetch /api/nota:", err);
+        resultadoDiv.textContent = "Ocurrió un error al consultar. Inténtelo de nuevo.";
+        resultadoDiv.classList.add("error");
+      }
+
+      resultadoDiv.style.display = "block";
+    });
+  </script>
+</body>
+</html>
