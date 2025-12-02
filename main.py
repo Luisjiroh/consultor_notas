@@ -1,6 +1,7 @@
 from fastapi import FastAPI, Request, Query
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
+from fastapi.middleware.cors import CORSMiddleware
 from pathlib import Path
 import csv
 
@@ -8,6 +9,15 @@ BASE_DIR = Path(__file__).resolve().parent
 DATA_FILE = BASE_DIR / "notas.csv"
 
 app = FastAPI(title="Consulta de Notas – Plan de Mercadeo")
+
+# 🔓 CORS: permitir peticiones desde Netlify (y otros orígenes)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # si quieres, luego se restringe al dominio de Netlify
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 
@@ -34,10 +44,6 @@ def cargar_notas():
 
 @app.get("/", response_class=HTMLResponse)
 async def home(request: Request):
-    """
-    Página principal con el formulario de consulta.
-    También funcionará en Render si compartes esta URL directamente.
-    """
     return templates.TemplateResponse("index.html", {"request": request})
 
 
@@ -45,11 +51,6 @@ async def home(request: Request):
 async def consultar_nota(
     codigo: str = Query(..., description="Código o número de cédula del estudiante")
 ):
-    """
-    Endpoint para consultar la nota por código.
-    Ejemplo de uso:
-        /api/nota?codigo=12345678
-    """
     notas = cargar_notas()
     codigo = codigo.strip()
 
@@ -64,8 +65,8 @@ async def consultar_nota(
 
     info = notas[codigo]
     return {
-        "encontrado": True,
-        "codigo": codigo,
-        "nombre": info["nombre"],
-        "nota": info["nota"],
+      "encontrado": True,
+      "codigo": codigo,
+      "nombre": info["nombre"],
+      "nota": info["nota"],
     }
